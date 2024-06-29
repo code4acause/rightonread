@@ -4,7 +4,7 @@ import streamlit as st
 import certifi
 ca = certifi.where()
 
-uri = f"mongodb+srv://{st.secrets["mongo"]["username"]}:{st.secrets["mongo"]["password"]}@cluster0.ssnuihs.mongodb.net/?appName=Cluster0"
+uri = f'mongodb+srv://{st.secrets["mongo_username"]}:{st.secrets["mongo_password"]}@cluster0.ssnuihs.mongodb.net/?appName=Cluster0'
 # Create a new client and connect to the server
 client = MongoClient(uri, server_api=ServerApi('1'))
 
