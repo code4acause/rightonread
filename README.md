@@ -15,3 +15,12 @@ google_key = "..."
 Then, to run the app:
 
 ```streamlit run main.py```
+
+## Development with Docker
+Run the following commands to build the dev docker image and run the container that use local files throughout development process:
+```
+podman build -t read .
+podman run -p 8501:8501 --name read -v %cd%:/home/streamlit read
+podman start read -a
+podman exec -it read bash
+```

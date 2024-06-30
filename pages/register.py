@@ -15,3 +15,5 @@ if st.button("Register"):
     else:
         users_collection.insert_one({"username": username, "password": hash_password(password),"bio": "", "user_type" : user_type.lower()})
         st.success("Registered successfully!")
+
+st.page_link("pages/login.py", label="Please login here!")
