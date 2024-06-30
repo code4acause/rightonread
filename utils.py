@@ -2,7 +2,7 @@ import streamlit as st
 import hashlib
 
 def check_user_logged_in():
-    if not st.session_state.user:
+    if not hasattr(st.session_state, 'user'):
         st.warning("Please log in to access this page")
         st.stop()
 
