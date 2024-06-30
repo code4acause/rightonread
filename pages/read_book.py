@@ -1,17 +1,18 @@
 import streamlit as st
 import google.generativeai as genai
-from database import db
+from database import db, competitions_collection
 import requests
 import time
 import json
 from PIL import Image
 from PyPDF2 import PdfReader
+from bson import ObjectId
 
 genai.configure(api_key=st.secrets["google_key"])
 
 # Assume these collections exist in the database
 books_collection = db["books"]
-questions_collection = db["questions"]
+# questions_collection = db["questions"]
 user_responses_collection = db["user_responses"]
 
 
@@ -58,13 +59,13 @@ def generate_questions(book_text, book_id):
         generation_config={"temperature": 0.7},
         safety_settings=safety
     )
-
+    st.write("Response:", response)
     questions_json = json.loads(response.text)
 
     # Store questions in the database
-    for q in questions_json:
-        q["book_id"] = book_id
-        questions_collection.insert_one(q)
+    # for q in questions_json:
+    #    q["book_id"] = book_id
+    #    questions_collection.insert_one(q)
 
     return questions_json
 
@@ -120,13 +121,19 @@ st.title("Interactive Book Quiz")
 user_id = st.session_state.user
 
 if user_id:
-    bid = st.session_state.get("book_id")
+    bid = st.query_params.get("book_id") # st.session_state.get("book_id")
     option = st.selectbox("Choose an option:", ["Search for a book", "Upload a PDF"])
     if bid:
         st.write("Book ID:", bid)
         st.write("Book Title:", st.session_state.book_title)
-        book_text = download_book_text(bid)
-        questions = generate_questions(book_text, bid)
+        competition = competitions_collection.find_one({"_id": ObjectId(st.session_state.competition_id)})
+        st.write("Competition:", competition)
+        book_c = db.pdf_books.find_one({"id": bid})
+        if  book_c:
+            book_text = book_c["content"]
+        #download_book_text(bid)
+        st.write("Book Text:", book_text[:1000])
+        questions = generate_questions(book_text, 0)
         st.session_state.questions = questions
     elif option == "Search for a book":
         search_query = st.text_input("Search for a book:")
@@ -194,7 +201,7 @@ if user_id:
                 q for q in questions if q["question"] == selected_question
             )
 
-            answer_method = st.radio("Choose how to answer:", ["Visual", "Text"])
+            answer_method = st.radio("Choose how to answer:", ["Text", "Visual"])
 
             if answer_method == "Visual":
                 captured_image = st.camera_input("Show the book location!")

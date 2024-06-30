@@ -10,6 +10,12 @@ def search_books(query):
     response = requests.get(f"https://gutendex.com/books?search={query}")
     return response.json()['results']
 
+def download_book_text(book_id):
+    book_info = requests.get(
+        f"https://gutenberg.org/cache/epub/{book_id}/pg{book_id}.txt"
+    ).text
+    return book_info
+
 def extract_text_from_pdf(file):
     pdf_reader = PdfReader(file)
     text = ""
@@ -60,10 +66,12 @@ if option == "Search for a book":
                     st.write(f"{book.get('title', 'Unknown Title')} by {', '.join(authors)}")
                 with col2:
                     if st.button("Add", key=f"add_{book.get('id', '')}"):
+                        book_text = download_book_text(book.get('id', ''))
                         book_info = {
                             "id": str(book.get('id', '')),
                             "title": book.get('title', 'Unknown Title'),
                             "authors": authors,
+                            "content": book_text,
                             "type": "gutenberg"
                         }
                         if book_info not in st.session_state.selected_books:
@@ -102,7 +110,7 @@ for i, book in enumerate(st.session_state.selected_books):
     with col2:
         if st.button("Remove", key=f"remove_{i}"):
             st.session_state.selected_books.pop(i)
-            st.experimental_rerun()
+            st.rerun()
 
 # Create competition button
 if st.button("Create Competition"):
@@ -129,11 +137,11 @@ if st.button("Create Competition"):
         
         # Store PDF content separately
         for book in st.session_state.selected_books:
-            if book['type'] == 'pdf':
-                db.pdf_books.insert_one({
-                    "id": book['id'],
-                    "content": book['content']
-                })
+            #if book['type'] == 'pdf':
+            db.pdf_books.insert_one({
+                "id": book['id'],
+                "content": book['content']
+            })
         
         result = competitions_collection.insert_one(new_competition)
         if result.inserted_id:
