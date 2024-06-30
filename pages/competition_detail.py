@@ -4,7 +4,7 @@ from utils import check_user_logged_in
 from bson import ObjectId
 
 check_user_logged_in()
-competition = competitions_collection.find_one({"_id": int( st.query_params["id"])})
+competition = competitions_collection.find_one({"_id": st.query_params["id"]})
 if competition:
     st.header(competition['name'])
     st.write(competition['description'])
