@@ -72,7 +72,7 @@ if st.session_state.create_competition:
                     for page in pdf_reader.pages:
                         text += page.extract_text()
                     pdf_file.close()
-                    
+                    print(text)
                     # Store text in dictionary with filename as key
                     raw_texts[os.path.basename(book.name)] = text
                     
