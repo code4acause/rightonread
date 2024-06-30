@@ -13,6 +13,7 @@ db = client["reading_competition_db"]
 
 
 users_collection = db["users"]
+user_stats_collection = db["user_stats"]
 competitions_collection = db["competitions"]
 books_collection = db["books"]
 
