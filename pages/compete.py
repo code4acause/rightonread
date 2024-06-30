@@ -36,6 +36,6 @@ if competition:
             {"$set": {f"books_read.{str(competition['_id'])}": books_read}}
         )
         st.success("Progress updated successfully!")
-        st.experimental_rerun()
+        st.rerun()
 else:
     st.error("Competition not found")

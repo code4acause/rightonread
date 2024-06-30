@@ -34,7 +34,7 @@ for comp in other_competitions:
                 {"$addToSet": {"participants": st.session_state.user["_id"]}}
             )
             st.success(f"Joined {comp['name']} successfully!")
-            st.experimental_rerun()
+            st.rerun()
     with col2:
         if st.button(f"View {comp['name']}", key=f"view_{comp['_id']}"):
             st.query_params["id"] = str(comp['_id'])
