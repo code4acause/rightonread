@@ -28,9 +28,6 @@ try:
 except:
     st.write("You have not read any books yet")
 
-st.write("Your phone number is " + str(user.get("phone_number")))
-
-
 # Initialize session state for editing mode and bio
 if 'editing' not in st.session_state:
     st.session_state.editing = False
