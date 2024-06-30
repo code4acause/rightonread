@@ -50,5 +50,15 @@ if competition:
     if st.button("Compete"):
         st.session_state.competition_id = competition_id
         st.switch_page("pages/compete.py")
+
+    if st.button(f"Leave {competition['name']}", key=f"leave_{competition['_id']}"):
+        result = competitions_collection.update_one(
+            {"_id": competition["_id"]},
+            {"$pull": {"participants": st.session_state.user["_id"]}}
+        )
+        if result.modified_count > 0:
+            st.success(f"Left {competition['name']} successfully!")
+        else:
+            st.error(f"You were not a participant in {competition['name']} or an error occurred")
 else:
     st.error("Competition not found")

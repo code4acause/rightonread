@@ -31,9 +31,16 @@ for comp in joined_competitions:
     col1.write(f"**{comp['name']}**")
     col2.write(comp['description'])
     with col3:
-        if st.button(f"Compete", key=f"compete_{comp['_id']}"):
-            st.query_params["id"] = str(comp['_id'])
-            st.switch_page("./pages/compete.py")
+        if st.button(f"Leave", key=f"leave_{comp['_id']}"):
+            result = competitions_collection.update_one(
+                {"_id": comp["_id"]},
+                {"$pull": {"participants": st.session_state.user["_id"]}}
+            )
+            if result.modified_count > 0:
+                st.success(f"Left {comp['name']} successfully!")
+                st.rerun()
+            else:
+                st.error(f"You were not a participant in {comp['name']} or an error occurred")
     with col4:
         if st.button(f"View", key=f"view_{comp['_id']}"):
             st.query_params["id"] = str(comp['_id'])
