@@ -12,13 +12,17 @@ def update_profile(user_id, new_bio):
     )
     st.success("Profile updated successfully!")
     st.session_state.bio = new_bio  # Update session state
-# user_stats_collection.find_one({"user_id": user_id})
+ustats = user_stats_collection.find_one({"user_id": st.session_state.user["_id"]})
 check_user_logged_in()
 user = users_collection.find_one({"_id": st.session_state.user["_id"]})
 print(user)
 st.header(f"Profile {user['username']}")
 st.write(f"Here are your statistics, {user['username']}")
-st.write("You have answered: " + str(user.get("correct_answers")) +" out of " + str(user.get("total_questions")) + " questions correctly")
+try:
+    ustats = user_stats_collection.find_one({"user_id.username": user["username"]})
+    st.write("You have answered: " + str(ustats.get("correct_answers")) +" out of " + str(ustats.get("total_questions")) + " questions correctly")
+except:
+    st.write("You have not answered any questions yet")
 
 comps = list(competitions_collection.find({"participants": user["_id"]}))
 st.write("You are part of " + str(len(comps)) + " competitions")
