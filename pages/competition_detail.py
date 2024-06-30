@@ -27,8 +27,12 @@ if competition:
     leaderboard = []
     for participant_id in competition['participants']:
         user = users_collection.find_one({"_id": participant_id})
-        books_read = len(user.get('books_read', {}).get(str(competition['_id']), []))
-        leaderboard.append((user['username'], books_read))
+        
+        competition_book_ids = {book['id'] for book in competition['books']}
+        user_book_ids = {book['id'] for book in user['books_read']}
+        books_read_count = len(competition_book_ids.intersection(user_book_ids))
+
+        leaderboard.append((user['username'], books_read_count))
     
     leaderboard.sort(key=lambda x: x[1], reverse=True)
     for rank, (username, books_read) in enumerate(leaderboard, 1):

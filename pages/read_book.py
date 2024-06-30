@@ -45,7 +45,7 @@ safety = [
     },
 ]
 
-def generate_questions(book_text, book_id):
+def generate_questions(book_text):
     prompt = f"""Given the following excerpt of a book, generate 5 general plot questions that would require the reader to flip through the book to find where they happened. Don't include the general location to find the answer to the question. Provide the relevant quote from the text in the answer. Avoid trick questions not directly answerable from the text. Respond in JSON format with an array of question objects, each containing 'question' and 'answer' fields:
 
     {book_text[:15000]}"""
@@ -64,8 +64,8 @@ def generate_questions(book_text, book_id):
         frequency_penalty=0,
         presence_penalty=0
         )
-        st.write(response.choices[0].message)
-        st.write("Response:", response.choices[0].message.content.strip())
+        print(response.choices[0].message)
+        print("Response:", response.choices[0].message.content.strip())
         questions_json = json.loads(response.choices[0].message.content.strip())
         print(questions_json)
 
@@ -100,9 +100,9 @@ def extract_text_from_pdf(file):
         text += page.extract_text()
     return text
 
-def update_user_stats(user_id, correct, book_id, book_title):
-    user_stats = db.user_stats.find_one({"user_id": user_id})
-    if user_stats:
+def update_question_counters(user_id, correct):
+    user = db.users.find_one({"_id": user_id})
+    if user:
         update_query = {
             "$inc": {
                 "total_questions": 1,
@@ -110,22 +110,39 @@ def update_user_stats(user_id, correct, book_id, book_title):
                 "incorrect_answers": 0 if correct else 1
             }
         }
-        if correct and book_id not in [book['id'] for book in user_stats.get('books_read', [])]:
-            update_query["$push"] = {
-                "books_read": {
-                    "id": book_id,
-                    "title": book_title
-                }
-            }
-        db.user_stats.update_one({"user_id": user_id}, update_query)
+        db.users.update_one({"_id": user_id}, update_query)
     else:
-        db.user_stats.insert_one({
-            "user_id": user_id,
+        db.users.insert_one({
+            "_id": user_id,
             "total_questions": 1,
             "correct_answers": 1 if correct else 0,
             "incorrect_answers": 0 if correct else 1,
-            "books_read": [{"id": book_id, "title": book_title}] if correct else []
+            "books_read": []
         })
+
+def update_books_read(user_id, correct, book_id, book_title):
+    if correct:
+        user = db.users.find_one({"_id": user_id})
+        if user:
+            if book_id not in [book['id'] for book in user.get('books_read', [])]:
+                update_query = {
+                    "$push": {
+                        "books_read": {
+                            "id": book_id,
+                            "title": book_title
+                        }
+                    }
+                }
+                db.users.update_one({"_id": user_id}, update_query)
+        else:
+            db.users.insert_one({
+                "_id": user_id,
+                "total_questions": 0,
+                "correct_answers": 0,
+                "incorrect_answers": 0,
+                "books_read": [{"id": book_id, "title": book_title}]
+            })
+
 
 
 st.title("Interactive Book Quiz")
@@ -140,12 +157,12 @@ if user_id:
         st.write("Book ID:", bid)
         st.write("Book Title:", st.session_state.book_title)
         competition = competitions_collection.find_one({"_id": ObjectId(st.session_state.competition_id)})
-        st.write("Competition:", competition)
+        #st.write("Competition:", competition)
         book_c = db.pdf_books.find_one({"id": bid})
         if book_c:
             book_text = book_c["content"]
-        st.write("Book Text:", book_text[:1000])
-        questions = generate_questions(book_text, 0)
+        #st.write("Book Text:", book_text[:1000])
+        questions = generate_questions(book_text)
         st.session_state.questions = questions
     elif option == "Search for a book":
         search_query = st.text_input("Search for a book:")
@@ -178,11 +195,12 @@ if user_id:
 
             if st.button("Generate Questions"):
                 book_text = download_book_text(selected_book_data["id"])
-                questions = generate_questions(book_text, book_id)
+                questions = generate_questions(book_text)
 
                 # Store questions in session state
                 st.session_state.questions = questions
                 st.session_state.book_id = book_id
+                print(type(book_id))
                 st.session_state.book_title = selected_book_data["title"]
 
     elif option == "Upload a PDF":
@@ -198,7 +216,7 @@ if user_id:
             book_id = result.inserted_id
 
             if st.button("Generate Questions"):
-                questions = generate_questions(book_text, book_id)
+                questions = generate_questions(book_text)
 
                 # Store questions in session state
                 st.session_state.questions = questions
@@ -213,7 +231,7 @@ if user_id:
         st.session_state.question_attempts = [0] * len(st.session_state.get("questions", []))
    # if "question_status" not in st.session_state:
         st.session_state.question_status = [False] * len(st.session_state.get("questions", []))
-        st.write("Answer at least 4 out of 5 questions correctly to pass the quiz")
+        st.write("Answer these questions")
         
         with st.form("quiz_form"):
             for i, question in enumerate(questions):
@@ -261,25 +279,25 @@ if user_id:
                         else:
                             st.error(f"Question {i+1}: Incorrect. Attempts left: {3 - st.session_state.question_attempts[i]}")
                     
-                    update_user_stats(user_id, analysis['correct'], st.session_state.book_id, st.session_state.book_title)
+                    update_question_counters(user_id, analysis['correct'])  
+            print(st.session_state.question_status)
+            st.session_state.question_status= st.session_state.question_status
 
-        all_questions_answered = all(status or attempts >= 3 for status, attempts in zip(st.session_state.question_status, st.session_state.question_attempts))
+        if st.button("Finish Quiz"):
+            print(st.session_state.question_status)
+            correct_count = sum(st.session_state.question_status)
+            st.write(f"Quiz completed! You answered {correct_count} out of {len(questions)} questions correctly.")
+            
+            if correct_count >= 4:
+                update_books_read(user_id, st.session_state.book_id, st.session_state.book_title)
+                st.success("Congratulations! You passed the quiz.")
+            else:
+                st.warning("You didn't pass the quiz. Keep reading and try again!")
+
+            # Reset quiz state
+            st.session_state.question_attempts = [0] * len(questions)
+            st.session_state.question_status = [False] * len(questions)
         
-        if all_questions_answered:
-            if st.button("Finish Quiz"):
-                correct_count = sum(st.session_state.question_status)
-                st.write(f"Quiz completed! You answered {correct_count} out of {len(questions)} questions correctly.")
-                
-                if correct_count >= 4:
-                    st.success("Congratulations! You passed the quiz.")
-                else:
-                    st.warning("You didn't pass the quiz. Keep reading and try again!")
-
-                # Reset quiz state
-                st.session_state.question_attempts = [0] * len(questions)
-                st.session_state.question_status = [False] * len(questions)
-        else:
-            st.info("Please answer all questions or use all attempts before finishing the quiz.")
 
     else:
         st.write("No questions available. Please generate questions first.")

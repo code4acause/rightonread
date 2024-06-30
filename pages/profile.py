@@ -18,7 +18,7 @@ user = users_collection.find_one({"_id": st.session_state.user["_id"]})
 print(user)
 st.header(f"Profile {user['username']}")
 st.write(f"Here are your statistics, {user['username']}")
-st.write("You have answered: " + str(user.get("correct_answers")) +" out of " + str(user.get("total_questions")) + " questions correctly")
+st.write("You have answered: " + str(user.get("correct_questions")) +" out of " + str(user.get("total_questions")) + " questions correctly")
 
 comps = list(competitions_collection.find({"participants": user["_id"]}))
 st.write("You are part of " + str(len(comps)) + " competitions")
