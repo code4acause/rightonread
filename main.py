@@ -7,6 +7,7 @@ st.set_page_config(page_title="Right on Read", layout="wide")
 if 'user' not in st.session_state:
     st.session_state.user = None
 
+landing_page = st.Page("pages/landing.py", title="Home", icon="🏠")
 login_page = st.Page("pages/login.py", title="Login", icon="🔑")
 register_page = st.Page("pages/register.py", title=" ")
 # profile_page = st.Page("pages/profile.py", title="Profile", icon="👤")
@@ -18,9 +19,9 @@ create_competition = st.Page("pages/create_competition.py", title="Create Compet
 
 if st.session_state.user:
     if st.session_state.user["user_type"] == "host":
-        pg = st.navigation([competitions_page, competition_detail_page, read_book_page, create_competition])
+        pg = st.navigation([landing_page, competitions_page, competition_detail_page, read_book_page, create_competition])
     else:
-        pg = st.navigation([competitions_page, competition_detail_page, read_book_page, compete_page])
+        pg = st.navigation([landing_page, competitions_page, competition_detail_page, read_book_page, compete_page])
 else:
     pg = st.navigation([login_page, register_page])
 

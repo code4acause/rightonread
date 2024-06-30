@@ -12,6 +12,8 @@ def update_profile(user_id, new_bio):
 
 check_user_logged_in()
 
+st.write(st.query_params.get("view_id")) # This will print the view_id query parameter
+
 user = users_collection.find_one({"_id": st.session_state.user["_id"]})
 st.header(f"Profile {user['username']}")
 

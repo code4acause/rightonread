@@ -23,4 +23,5 @@ podman build -t read .
 podman run -p 8501:8501 --name read -v %cd%:/home/streamlit read
 podman start read -a
 podman exec -it read bash
+podman run -p 8501:8501 --rm -v %cd%:/home/streamlit read pages/profile.py
 ```
