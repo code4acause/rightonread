@@ -7,11 +7,13 @@ st.set_page_config(page_title="Right on Read", layout="wide")
 if 'user' not in st.session_state:
     st.session_state.user = None
 
-login_page = st.Page("stpages/login.py", title="Login", icon="🔑")
-register_page = st.Page("stpages/register.py", title="Register", icon="📝")
-profile_page = st.Page("stpages/profile.py", title="Profile", icon="👤")
-competitions_page = st.Page("stpages/competitions.py", title="Competitions", icon="🏆")
-read_book_page = st.Page("stpages/read_book.py", title="Read Book", icon="📚")
+login_page = st.Page("pages/login.py", title="Login", icon="🔑")
+register_page = st.Page("pages/register.py", title="Register", icon="📝")
+profile_page = st.Page("pages/profile.py", title="Profile", icon="👤")
+competitions_page = st.Page("pages/competitions.py", title="Competitions", icon="🏆")
+read_book_page = st.Page("pages/read_book.py", title="Read Book", icon="📚")
+
+
 
 if st.session_state.user:
     pg = st.navigation([profile_page, competitions_page, read_book_page])
