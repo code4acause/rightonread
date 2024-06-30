@@ -9,7 +9,6 @@ user_type = st.radio("Register as:", ("User", "Host"))
 
 username = st.text_input("Username")
 password = st.text_input("Password", type="password")
-bio = st.text_area("Bio")
 if st.button("Register"):
     if users_collection.find_one({"username": username}):
         st.error("Username already exists")
