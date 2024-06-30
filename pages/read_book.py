@@ -7,6 +7,7 @@ import json
 from PIL import Image
 from PyPDF2 import PdfReader
 from bson import ObjectId
+from openai import OpenAI
 
 genai.configure(api_key=st.secrets["google_key"])
 
@@ -49,25 +50,57 @@ safety = [
 ]
 
 
+
 def generate_questions(book_text, book_id):
-    model = genai.GenerativeModel(
-        "gemini-1.5-pro", generation_config={"response_mime_type": "application/json"}
-    )
-    prompt = f"Given the following book text, generate 5 general plot questions that would require the reader to flip through the book to find where they happened. Don't include the general location to find the answer to the question. Provide the relevant quote from the text in the answer. Avoid trick questions not directly answerable from the text. Respond in JSON format with an array of question objects, each containing 'question' and 'answer' fields:\n\n{book_text[:30000]}"
-    response = model.generate_content(
-        prompt,
-        generation_config={"temperature": 0.7},
-        safety_settings=safety
-    )
-    st.write("Response:", response)
-    questions_json = json.loads(response.text)
 
-    # Store questions in the database
-    # for q in questions_json:
-    #    q["book_id"] = book_id
-    #    questions_collection.insert_one(q)
+    prompt = f"""Given the following excerpt of a book, generate 5 general plot questions that would require the reader to flip through the book to find where they happened. Don't include the general location to find the answer to the question. Provide the relevant quote from the text in the answer. Avoid trick questions not directly answerable from the text. Respond in JSON format with an array of question objects, each containing 'question' and 'answer' fields:
 
-    return questions_json
+    {book_text[:15000]}"""  # OpenAI has a smaller context window, so we're limiting to 4000 characters
+    format = "[{\"question\": \"What was the name of the protagonist's childhood pet?\",\"answer\": \"The protagonist's childhood pet was a golden retriever named Sunny. This is evident from the passage: 'I still remember Sunny, my golden retriever, wagging her tail every time I came home from school.'\"},{\"question\": \"In which city did the main character start their career?\",\"answer\": \"The main character started their career in New York City. This is mentioned in the text: 'Fresh out of college, I packed my bags and headed to the bustling streets of New York City, ready to start my first real job.'\"},{\"question\": \"What was the unexpected event that changed the course of the story?\",\"answer\": \"The unexpected event was a letter from a long-lost relative. The text states: 'Just as I was settling into my routine, a letter arrived. Postmarked from a small town I'd never heard of, it was from an aunt I didn't know existed.'\"}]"
+    try:
+        client = OpenAI(api_key= st.secrets["OPENAI_KEY"])
+
+        response = client.chat.completions.create(
+        model="gpt-4o",
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant that generates questions about books in this exact format: {format}"},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.7,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0
+        )
+        st.write(response.choices[0].message)
+        st.write("Response:", response.choices[0].message.content.strip()[7:-3:])
+        questions_json = json.loads(response.choices[0].message.content.strip()[7:-3:])
+        print(questions_json)
+
+        return questions_json
+
+    except Exception as e:
+        st.error(f"An error occurred: {str(e)}")
+        return []
+
+# def generate_questions(book_text, book_id):
+#     model = genai.GenerativeModel(
+#         "gemini-1.5-pro", generation_config={"response_mime_type": "application/json"}
+#     )
+#     prompt = f"Given the following book text, generate 5 general plot questions that would require the reader to flip through the book to find where they happened. Don't include the general location to find the answer to the question. Provide the relevant quote from the text in the answer. Avoid trick questions not directly answerable from the text. Respond in JSON format with an array of question objects, each containing 'question' and 'answer' fields:\n\n{book_text[:30000]}"
+#     response = model.generate_content(
+#         prompt,
+#         generation_config={"temperature": 0.7},
+#         safety_settings=safety
+#     )
+#     st.write("Response:", response)
+#     questions_json = json.loads(response.text)
+
+#     # Store questions in the database
+#     # for q in questions_json:
+#     #    q["book_id"] = book_id
+#     #    questions_collection.insert_one(q)
+
+#     return questions_json
 
 
 def analyze_image(image, question):
@@ -191,7 +224,8 @@ if user_id:
 
     # Retrieve questions from session state
     questions = st.session_state.get("questions", [])
-
+    st.write("Answer at least 4 out of 5 questions correctly to pass the quiz")
+    quizstatus = [False]*len(questions)
     if questions:
         selected_question = st.selectbox(
             "Select a question:", [q["question"] for q in questions]
@@ -216,7 +250,7 @@ if user_id:
                     user_response = {
                         "user_id": user_id,
                         "book_id": book_id,
-                        "question_id": selected_question_data["_id"],
+                        #"question_id": selected_question_data["_id"],
                         "correct": analysis["correct"],
                         "confidence": analysis["confidence"],
                         "timestamp": time.time(),
