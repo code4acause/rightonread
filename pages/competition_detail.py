@@ -41,6 +41,7 @@ if competition:
         col1.write(book["title"])
         with col2:
             if st.button(f"Read", key=f"read_{book['id']}"):
+                st.query_params["book_id"] = book['id']
                 st.session_state.book_id = book['id']
                 st.session_state.book_title = book['title']
                 st.session_state.competition_id = competition_id
