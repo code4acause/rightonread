@@ -9,6 +9,7 @@ Write the `.streamlit/secrets.toml` file with the following content:
 ```
 mongo_username = "..."
 mongo_password = "..."
+google_key = "..."
 ```
 
 Then, to run the app:
