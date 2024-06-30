@@ -4,12 +4,15 @@ from utils import check_user_logged_in
 from bson import ObjectId
 
 check_user_logged_in()
-competition = competitions_collection.find_one({"_id": st.query_params["id"]})
+st.query_params["id"]=st.query_params["id"]
+print(st.query_params["id"])
+competition = competitions_collection.find_one({"_id":  ObjectId(st.query_params["id"])})
+print(competition)
 if competition:
     st.header(competition['name'])
     st.write(competition['description'])
-    st.write(f"Start Date: {competition['start_date']}")
-    st.write(f"End Date: {competition['end_date']}")
+    st.write(f"Start Date: {competition['start_date'].date()}")
+    st.write(f"End Date: {competition['end_date'].date()}")
     
     # Display leaderboard
     st.subheader("Leaderboard")

@@ -10,7 +10,7 @@ if st.button("Login"):
     if user:
         st.session_state.user = user
         st.success("Logged in successfully!")
-        st.experimental_rerun()
+        st.rerun()
     else:
         st.error("Invalid credentials")
 
