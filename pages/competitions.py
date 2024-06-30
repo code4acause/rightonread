@@ -21,7 +21,7 @@ if user["user_type"] == "host":
                 st.switch_page("./pages/competition_detail.py")
     st.stop()
 
-st.header(f"Competitions for {user['name']}")
+st.header(f"Competitions for {user['username']}")
 
 # List joined competitions
 st.subheader("Joined Competitions")
@@ -31,11 +31,11 @@ for comp in joined_competitions:
     col1.write(f"**{comp['name']}**")
     col2.write(comp['description'])
     with col3:
-        if st.button(f"Compete in {comp['name']}", key=f"compete_{comp['_id']}"):
+        if st.button(f"Compete", key=f"compete_{comp['_id']}"):
             st.query_params["id"] = str(comp['_id'])
             st.switch_page("./pages/compete.py")
     with col4:
-        if st.button(f"View {comp['name']}", key=f"view_{comp['_id']}"):
+        if st.button(f"View", key=f"view_{comp['_id']}"):
             st.query_params["id"] = str(comp['_id'])
             st.switch_page("./pages/competition_detail.py")
 

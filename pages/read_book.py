@@ -55,9 +55,15 @@ st.title("Interactive Book Quiz")
 user_id = st.session_state.user
 
 if user_id:
+    bid = st.session_state.get("book_id") # st.query_params.get("bookid") 
     option = st.selectbox("Choose an option:", ["Search for a book", "Upload a PDF"])
-    
-    if option == "Search for a book":
+    if bid:
+        st.write("Book ID:", bid)
+        st.write("Book Title:", st.session_state.book_title)
+        book_text = download_book_text(bid)
+        questions = generate_questions(book_text, bid)
+        st.session_state.questions = questions
+    elif option == "Search for a book":
         search_query = st.text_input("Search for a book:")
         if search_query:
             books = search_books(search_query)

@@ -4,10 +4,16 @@ from utils import check_user_logged_in
 from bson import ObjectId
 
 check_user_logged_in()
-competition_id = st.query_params.get("id")
+
+# Get competition ID from query params or session state
+competition_id = st.query_params.get("id") or st.session_state.get("competition_id")
+
 if not competition_id:
     st.error("No competition ID provided")
     st.stop()
+
+# Store competition ID in session state
+st.session_state.competition_id = competition_id
 
 competition = competitions_collection.find_one({"_id": ObjectId(competition_id)})
 if competition:
@@ -31,10 +37,18 @@ if competition:
     # Display books in the competition
     st.subheader("Books")
     for book in competition['books']:
-        st.write(book)
+        col1, col2 = st.columns(2)
+        col1.write(book["title"])
+        with col2:
+            if st.button(f"Read", key=f"read_{book['id']}"):
+                st.session_state.book_id = book['id']
+                st.session_state.book_title = book['title']
+                st.session_state.competition_id = competition_id
+                st.switch_page("pages/read_book.py")
     
     # Add Compete button
     if st.button("Compete"):
-        st.switch_page("./pages/compete.py")
+        st.session_state.competition_id = competition_id
+        st.switch_page("pages/compete.py")
 else:
     st.error("Competition not found")
