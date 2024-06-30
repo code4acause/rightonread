@@ -12,7 +12,7 @@ def update_profile(user_id, new_bio):
     )
     st.success("Profile updated successfully!")
     st.session_state.bio = new_bio  # Update session state
-# user_stats_collection.find_one({"user_id": user_id})
+ustats = user_stats_collection.find_one({"user_id": st.session_state.user["_id"]})
 check_user_logged_in()
 user = users_collection.find_one({"_id": st.session_state.user["_id"]})
 print(user)
@@ -27,9 +27,6 @@ try:
     st.write("You have read " + str(len(numbooks)) + " books")
 except:
     st.write("You have not read any books yet")
-
-st.write("Your phone number is " + str(user.get("phone_number")))
-
 
 # Initialize session state for editing mode and bio
 if 'editing' not in st.session_state:
