@@ -233,28 +233,27 @@ if user_id:
         st.session_state.question_status = [False] * len(st.session_state.get("questions", []))
         st.write("Answer these questions")
         
-        with st.form("quiz_form"):
-            for i, question in enumerate(questions):
-                st.subheader(f"Question {i+1}: {question['question']}")
+        for i, question in enumerate(questions):
+            st.subheader(f"Question {i+1}: {question['question']}")
 
-                if st.session_state.question_status[i]:
-                    st.success("Correct!")
-                    continue
+            if st.session_state.question_status[i]:
+                st.success("Correct!")
+                continue
 
-                if st.session_state.question_attempts[i] >= 3:
-                    st.error("No more attempts left.")
-                    continue
+            if st.session_state.question_attempts[i] >= 3:
+                st.error("No more attempts left.")
+                continue
 
-                answer_method = st.radio(f"Choose how to answer Question {i+1}:", ["Text", "Visual"], key=f"method_{i}")
+            answer_method = st.radio(f"Choose how to answer Question {i+1}:", ["Text", "Visual"], key=f"method_{i}")
 
-                if answer_method == "Visual":
-                    captured_image = st.camera_input(f"Show the book location for Question {i+1}!")
-                    if captured_image is not None:
-                        st.image(captured_image, caption="Captured Image")
-                elif answer_method == "Text":
-                    st.session_state[f"answer_{i}"] = st.text_input(f"Your answer for Question {i+1}:", key=f"answer_input_{i}")
+            if answer_method == "Visual":
+                captured_image = st.camera_input(f"Show the book location for Question {i+1}!")
+                if captured_image is not None:
+                    st.image(captured_image, caption="Captured Image")
+            elif answer_method == "Text":
+                st.session_state[f"answer_{i}"] = st.text_input(f"Your answer for Question {i+1}:", key=f"answer_input_{i}")
 
-            submitted = st.form_submit_button("Submit Answers")
+        submitted = st.button("Submit Answers")
 
         if submitted:
             for i, question in enumerate(questions):
